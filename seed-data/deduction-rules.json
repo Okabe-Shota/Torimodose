@@ -1,0 +1,112 @@
+[
+  {
+    "name": "医療費控除",
+    "category": "income",
+    "questionKey": "medical_expenses",
+    "condition": "年間医療費が10万円（または所得の5%）を超える場合",
+    "formula": { "type": "excess", "threshold": 100000, "incomeRatioThreshold": 0.05 },
+    "legalBasis": "所得税法第73条",
+    "maxAmount": 2000000,
+    "description": "1年間に支払った医療費が10万円（総所得金額等が200万円未満の場合はその5%）を超えた分について、所得から控除できます。本人だけでなく、生計を一にする配偶者・親族の医療費も含められます。",
+    "howTo": "確定申告時に「医療費控除の明細書」を作成し、医療費の領収書をもとに申告します。医療費通知（お知らせ）を利用することも可能です。"
+  },
+  {
+    "name": "ふるさと納税（寄附金控除）",
+    "category": "income",
+    "questionKey": "furusato_nozei",
+    "condition": "ふるさと納税（特定寄附金）を行った場合",
+    "formula": { "type": "furusato", "selfBurden": 2000, "deductible": "amount - 2000" },
+    "legalBasis": "所得税法第78条",
+    "maxAmount": null,
+    "description": "ふるさと納税として自治体へ寄附した金額から自己負担額2,000円を差し引いた額が所得控除の対象となります。ワンストップ特例制度を利用すれば確定申告不要で住民税から控除されます（所得税控除は確定申告が必要）。",
+    "howTo": "確定申告では「寄附金控除」として申告します。寄附先自治体から送られる「寄附金受領証明書」が必要です。ワンストップ特例は5自治体以内・給与所得者等の条件があります。"
+  },
+  {
+    "name": "iDeCo（個人型確定拠出年金）掛金控除",
+    "category": "income",
+    "questionKey": "ideco",
+    "condition": "iDeCoに加入し掛金を拠出している場合",
+    "formula": { "type": "fixed", "monthlyMax": 23000, "annualMax": 276000, "deductible": "full_amount" },
+    "legalBasis": "所得税法第75条",
+    "maxAmount": 276000,
+    "description": "iDeCo（個人型確定拠出年金）に拠出した掛金の全額が小規模企業共済等掛金控除として所得から差し引かれます。掛金上限は加入資格（会社員・自営業など）により異なります（会社員は月2.3万円が上限）。",
+    "howTo": "年末調整または確定申告で申告します。iDeCo運営管理機関から毎年10〜11月頃に送られる「小規模企業共済等掛金払込証明書」を添付します。"
+  },
+  {
+    "name": "生命保険料控除",
+    "category": "income",
+    "questionKey": "life_insurance",
+    "condition": "生命保険・介護医療保険・個人年金保険の保険料を支払っている場合",
+    "formula": { "type": "fixed", "monthlyMax": 10000, "annualMax": 120000, "deductible": "tiered_calculation" },
+    "legalBasis": "所得税法第76条",
+    "maxAmount": 120000,
+    "description": "一般生命保険料・介護医療保険料・個人年金保険料のそれぞれについて最大4万円、合計最大12万円が所得から控除されます（新制度）。旧制度契約は区分が異なります。",
+    "howTo": "年末調整または確定申告で申告します。保険会社から毎年10〜11月頃に送られる「生命保険料控除証明書」が必要です。"
+  },
+  {
+    "name": "地震保険料控除",
+    "category": "income",
+    "questionKey": "earthquake_insurance",
+    "condition": "地震保険料（または旧長期損害保険料）を支払っている場合",
+    "formula": { "type": "fixed", "monthlyMax": 4167, "annualMax": 50000, "deductible": "full_amount_up_to_max" },
+    "legalBasis": "所得税法第77条",
+    "maxAmount": 50000,
+    "description": "居住用家屋・家財を対象とする地震保険の保険料が最大5万円まで所得から控除されます。旧長期損害保険料との併用も一定条件で可能です。",
+    "howTo": "年末調整または確定申告で申告します。保険会社から送られる「地震保険料控除証明書」が必要です。"
+  },
+  {
+    "name": "住宅ローン控除（住宅借入金等特別控除）",
+    "category": "credit",
+    "questionKey": "housing_loan",
+    "condition": "住宅ローンを利用してマイホームを取得・増改築し、居住している場合",
+    "formula": { "type": "percentage", "rate": 0.007, "cap": 210000, "base": "year_end_loan_balance" },
+    "legalBasis": "租税特別措置法第41条",
+    "maxAmount": 210000,
+    "description": "住宅ローンの年末残高の0.7%が所得税から直接控除（税額控除）されます。控除期間は新築・認定住宅等で最長13年、中古住宅で10年です。所得税から引ききれない分は住民税からも一部控除されます。",
+    "howTo": "入居した年は確定申告が必須です。2年目以降は給与所得者であれば年末調整で手続きできます。「住宅借入金等特別控除申告書」および「残高証明書」が必要です。"
+  },
+  {
+    "name": "扶養控除",
+    "category": "income",
+    "questionKey": "dependents",
+    "condition": "16歳以上の扶養親族（子・親など）がいる場合",
+    "formula": { "type": "fixed", "monthlyMax": 31667, "annualMax": 380000, "deductible": "per_dependent" },
+    "legalBasis": "所得税法第84条",
+    "maxAmount": 380000,
+    "description": "16歳以上で年収103万円以下の扶養親族1人につき38万円（19〜22歳の特定扶養親族は63万円、70歳以上の老人扶養親族は48万円または58万円）が所得から控除されます。",
+    "howTo": "年末調整の「扶養控除等（異動）申告書」に扶養親族を記入して提出します。確定申告の場合は申告書に記載します。"
+  },
+  {
+    "name": "配偶者控除・配偶者特別控除",
+    "category": "income",
+    "questionKey": "spouse",
+    "condition": "年収201.6万円未満の配偶者がいる場合",
+    "formula": { "type": "fixed", "monthlyMax": 31667, "annualMax": 380000, "deductible": "tiered_by_spouse_income" },
+    "legalBasis": "所得税法第83条",
+    "maxAmount": 380000,
+    "description": "配偶者の年収が103万円以下の場合は配偶者控除（最大38万円）、103万円超201.6万円未満の場合は配偶者特別控除（段階的に減額）が受けられます。本人の所得が1,000万円超の場合は対象外です。",
+    "howTo": "年末調整の「配偶者控除等申告書」を提出します。配偶者の年収見込みを記入する必要があります。確定申告でも申告可能です。"
+  },
+  {
+    "name": "勤労学生控除",
+    "category": "income",
+    "questionKey": "working_student",
+    "condition": "学生で給与収入が130万円以下かつ他の所得が10万円以下の場合",
+    "formula": { "type": "fixed", "monthlyMax": 2250, "annualMax": 270000, "deductible": "fixed_270000" },
+    "legalBasis": "所得税法第82条",
+    "maxAmount": 270000,
+    "description": "特定の学校に在籍する勤労学生（アルバイト等をしている学生）で、給与収入が130万円以下かつ給与以外の所得が10万円以下の場合、27万円が所得から控除されます。",
+    "howTo": "年末調整の「扶養控除等（異動）申告書」の勤労学生欄に記入し、学校の在学証明書または学生証のコピーを提出します。"
+  },
+  {
+    "name": "雑損控除",
+    "category": "income",
+    "questionKey": "casualty_loss",
+    "condition": "災害・盗難・横領などで生活に必要な資産に損害を受けた場合",
+    "formula": { "type": "excess", "threshold": 100000, "incomeRatioThreshold": 0.1, "deductible": "max(loss - income*0.1, casualty_cost - 50000)" },
+    "legalBasis": "所得税法第72条",
+    "maxAmount": null,
+    "description": "災害（火災・風水害・震災など）、盗難、横領によって生活用資産（住宅・家財など）に損害を受けた場合、損失額から総所得金額の10%を差し引いた額または災害関連支出から5万円を差し引いた額のいずれか多い方が控除されます。",
+    "howTo": "確定申告で申告します。被害の状況を証明する書類（罹災証明書、盗難届の受理番号など）と損害額の計算書が必要です。控除しきれない損失は翌年以降3年間繰り越せます。"
+  }
+]

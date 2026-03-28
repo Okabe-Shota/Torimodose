@@ -1,0 +1,12 @@
+[
+  { "year": 2024, "occupation": "software_engineer", "region": "tokyo", "ageGroup": "20-24", "median": 3500000, "p25": 3000000, "p75": 4000000, "source": "厚労省賃金構造基本統計調査2024" },
+  { "year": 2024, "occupation": "software_engineer", "region": "tokyo", "ageGroup": "25-29", "median": 4500000, "p25": 3800000, "p75": 5200000, "source": "厚労省賃金構造基本統計調査2024" },
+  { "year": 2024, "occupation": "software_engineer", "region": "osaka", "ageGroup": "20-24", "median": 3200000, "p25": 2700000, "p75": 3700000, "source": "厚労省賃金構造基本統計調査2024" },
+  { "year": 2024, "occupation": "software_engineer", "region": "osaka", "ageGroup": "25-29", "median": 3800000, "p25": 3200000, "p75": 4400000, "source": "厚労省賃金構造基本統計調査2024" },
+  { "year": 2024, "occupation": "sales", "region": "tokyo", "ageGroup": "20-24", "median": 3200000, "p25": 2700000, "p75": 3800000, "source": "厚労省賃金構造基本統計調査2024" },
+  { "year": 2024, "occupation": "sales", "region": "tokyo", "ageGroup": "25-29", "median": 4000000, "p25": 3300000, "p75": 4800000, "source": "厚労省賃金構造基本統計調査2024" },
+  { "year": 2024, "occupation": "office_admin", "region": "tokyo", "ageGroup": "20-24", "median": 2900000, "p25": 2500000, "p75": 3400000, "source": "厚労省賃金構造基本統計調査2024" },
+  { "year": 2024, "occupation": "office_admin", "region": "tokyo", "ageGroup": "25-29", "median": 3500000, "p25": 3000000, "p75": 4100000, "source": "厚労省賃金構造基本統計調査2024" },
+  { "year": 2024, "occupation": "marketing", "region": "tokyo", "ageGroup": "20-24", "median": 3300000, "p25": 2800000, "p75": 3900000, "source": "厚労省賃金構造基本統計調査2024" },
+  { "year": 2024, "occupation": "marketing", "region": "tokyo", "ageGroup": "25-29", "median": 4200000, "p25": 3500000, "p75": 5000000, "source": "厚労省賃金構造基本統計調査2024" }
+]
