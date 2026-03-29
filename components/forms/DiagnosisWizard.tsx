@@ -110,42 +110,37 @@ export function DiagnosisWizard({ annualIncome, age }: Props) {
   const currentQuestion = QUESTIONS[step]
   const progress = Math.round((step / QUESTIONS.length) * 100)
 
-  function handleNo() {
-    setAnswers((prev) => ({ ...prev, [currentQuestion.key]: { using: false } }))
+  function recordAndAdvance(entry: AnswerEntry) {
+    const updatedAnswers = { ...answers, [currentQuestion.key]: entry }
+    setAnswers(updatedAnswers)
     setPendingYes(false)
     setFollowUpValue("")
-    advance()
+
+    const nextStep = step + 1
+    if (nextStep >= QUESTIONS.length) {
+      const payload = { annualIncome, answers: updatedAnswers }
+      const encoded = encodeURIComponent(JSON.stringify(payload))
+      router.push(`/result/full?data=${encoded}`)
+    } else {
+      setStep(nextStep)
+    }
+  }
+
+  function handleNo() {
+    recordAndAdvance({ using: false })
   }
 
   function handleYes() {
     if (currentQuestion.followUp) {
       setPendingYes(true)
     } else {
-      setAnswers((prev) => ({ ...prev, [currentQuestion.key]: { using: true } }))
-      advance()
+      recordAndAdvance({ using: true })
     }
   }
 
   function handleFollowUpSubmit() {
     const amount = followUpValue ? parseFloat(followUpValue) : undefined
-    setAnswers((prev) => ({
-      ...prev,
-      [currentQuestion.key]: { using: true, ...(amount !== undefined ? { amount } : {}) },
-    }))
-    setPendingYes(false)
-    setFollowUpValue("")
-    advance()
-  }
-
-  function advance() {
-    const nextStep = step + 1
-    if (nextStep >= QUESTIONS.length) {
-      const payload = { annualIncome, answers }
-      const encoded = encodeURIComponent(JSON.stringify(payload))
-      router.push(`/result/full?data=${encoded}`)
-    } else {
-      setStep(nextStep)
-    }
+    recordAndAdvance({ using: true, ...(amount !== undefined ? { amount } : {}) })
   }
 
   return (
