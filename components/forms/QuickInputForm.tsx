@@ -12,21 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-const OCCUPATIONS = [
-  { value: "software_engineer", label: "エンジニア・IT" },
-  { value: "sales", label: "営業" },
-  { value: "office_admin", label: "事務・管理" },
-  { value: "marketing", label: "マーケティング・企画" },
-];
-
-const REGIONS = [
-  { value: "tokyo", label: "東京都" },
-  { value: "osaka", label: "大阪府" },
-  { value: "kanagawa", label: "神奈川県" },
-  { value: "aichi", label: "愛知県" },
-  { value: "fukuoka", label: "福岡県" },
-];
+import { OCCUPATIONS, REGIONS, OCCUPATION_LABELS, REGION_LABELS } from "@/lib/constants";
 
 export function QuickInputForm() {
   const router = useRouter();
@@ -81,7 +67,9 @@ export function QuickInputForm() {
         <Label htmlFor="occupation">職種</Label>
         <Select value={occupation} onValueChange={(v) => setOccupation(v ?? "")}>
           <SelectTrigger id="occupation">
-            <SelectValue placeholder="職種を選択" />
+            <SelectValue placeholder="職種を選択">
+              {occupation ? OCCUPATION_LABELS[occupation] : null}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {OCCUPATIONS.map((o) => (
@@ -97,7 +85,9 @@ export function QuickInputForm() {
         <Label htmlFor="region">勤務地</Label>
         <Select value={region} onValueChange={(v) => setRegion(v ?? "")}>
           <SelectTrigger id="region">
-            <SelectValue placeholder="勤務地を選択" />
+            <SelectValue placeholder="勤務地を選択">
+              {region ? REGION_LABELS[region] : null}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {REGIONS.map((r) => (

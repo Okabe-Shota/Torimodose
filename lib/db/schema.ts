@@ -38,7 +38,7 @@ export const salaryStatistics = pgTable("salary_statistics", {
 export const deductionRules = pgTable("deduction_rules", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  category: text("category", { enum: ["income", "credit"] }).notNull(),
+  category: text("category", { enum: ["income", "credit", "benefit"] }).notNull(),
   questionKey: text("question_key").notNull(),
   condition: text("condition").notNull(),
   formula: jsonb("formula").notNull(),

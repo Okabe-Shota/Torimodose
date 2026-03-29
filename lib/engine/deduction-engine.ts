@@ -13,7 +13,7 @@ export type FormulaType =
 export type DeductionRule = {
   id: number;
   name: string;
-  category: "income" | "credit";
+  category: "income" | "credit" | "benefit";
   questionKey: string;
   condition: "not_using";
   formula: FormulaType;
@@ -30,7 +30,7 @@ export type UserAnswers = {
 
 export type DeductionResult = {
   name: string;
-  category: "income" | "credit";
+  category: "income" | "credit" | "benefit";
   potentialSaving: number;
   deductionAmount: number;
   legalBasis: string;
@@ -81,6 +81,20 @@ export function evaluateDeductions(
     const answer = answers[rule.questionKey];
     if (!answer || typeof answer === "number") continue;
     if (answer.using) continue;
+
+    // 給付金は「もらえるお金」として最大額を表示
+    if (rule.category === "benefit") {
+      results.push({
+        name: rule.name,
+        category: rule.category,
+        potentialSaving: rule.maxAmount ?? 0,
+        deductionAmount: 0,
+        legalBasis: rule.legalBasis,
+        description: rule.description,
+        howTo: rule.howTo,
+      });
+      continue;
+    }
 
     const deductionAmount = calcDeductionAmount(rule, annualIncome, answer);
 
