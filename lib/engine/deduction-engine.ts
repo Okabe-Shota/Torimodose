@@ -80,7 +80,10 @@ export function evaluateDeductions(
   for (const rule of rules) {
     const answer = answers[rule.questionKey];
     if (!answer || typeof answer === "number") continue;
-    if (answer.using) continue;
+
+    // 「はい」= 該当する = using: true → 対象として表示
+    // 「いいえ」= 該当しない = using: false → スキップ
+    if (!answer.using) continue;
 
     // 給付金は「もらえるお金」として最大額を表示
     if (rule.category === "benefit") {
