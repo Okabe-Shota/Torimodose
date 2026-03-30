@@ -20,17 +20,26 @@ export async function saveDiagnosis(params: {
 }) {
   const session = await auth();
   const userId = session?.user?.id || null;
+  console.log("STEP1: auth done, userId=", userId);
 
   const encryptionKey = process.env.ENCRYPTION_KEY;
   if (!encryptionKey) {
-    console.error("SAVE-DIAGNOSIS FAIL: ENCRYPTION_KEY not set");
+    console.error("FAIL: no ENCRYPTION_KEY");
     return { error: "Encryption key not configured" };
+  }
+  console.log("STEP2: encryptionKey present");
+
+  let encryptedInput: string;
+  try {
+    encryptedInput = encrypt(JSON.stringify(params.input), encryptionKey);
+    console.log("STEP3: encrypt ok");
+  } catch (e) {
+    console.error("FAIL at encrypt:", String(e).slice(0, 80));
+    return { error: "Encryption failed" };
   }
 
   try {
-    const encryptedInput = encrypt(JSON.stringify(params.input), encryptionKey);
-
-    // Drizzle ORM で直接 INSERT（Edge Function を経由しない）
+    console.log("STEP4: inserting diagnosis");
     const [inserted] = await db
       .insert(diagnoses)
       .values({
@@ -43,10 +52,10 @@ export async function saveDiagnosis(params: {
       })
       .returning({ id: diagnoses.id });
 
-    console.log("SAVE-DIAGNOSIS SUCCESS: diagnosisId =", inserted.id);
+    console.log("STEP5: diagnosis saved id=", inserted.id);
 
-    // diagnosis_inputs も直接 INSERT
     if (inserted.id && params.diagnosisInputData) {
+      console.log("STEP6: inserting inputs");
       await db.insert(diagnosisInputs).values({
         diagnosisId: inserted.id,
         income: params.diagnosisInputData.income,
@@ -54,12 +63,14 @@ export async function saveDiagnosis(params: {
         occupation: params.diagnosisInputData.occupation,
         region: params.diagnosisInputData.region,
       });
-      console.log("SAVE-DIAGNOSIS-INPUTS SUCCESS");
+      console.log("STEP7: inputs saved");
     }
 
     return { success: true, diagnosisId: inserted.id };
   } catch (error) {
-    console.error("SAVE-DIAGNOSIS FAIL:", error instanceof Error ? error.message : error);
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error("FAIL at step4+:", msg.slice(0, 100));
+    console.error("FAIL detail:", msg.slice(100, 200));
     return { error: "Failed to save diagnosis" };
   }
 }
