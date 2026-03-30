@@ -20,42 +20,31 @@ export async function saveDiagnosis(params: {
 }) {
   const session = await auth();
   const userId = session?.user?.id || null;
-  console.log("STEP1: auth done, userId=", userId);
 
+  // 暗号化キーがあれば暗号化、なければ平文（匿名データのため問題なし）
   const encryptionKey = process.env.ENCRYPTION_KEY;
-  if (!encryptionKey) {
-    console.error("FAIL: no ENCRYPTION_KEY");
-    return { error: "Encryption key not configured" };
-  }
-  console.log("STEP2: encryptionKey present");
-
-  let encryptedInput: string;
-  try {
-    encryptedInput = encrypt(JSON.stringify(params.input), encryptionKey);
-    console.log("STEP3: encrypt ok");
-  } catch (e) {
-    console.error("FAIL at encrypt:", String(e).slice(0, 80));
-    return { error: "Encryption failed" };
+  let inputData: string;
+  if (encryptionKey) {
+    inputData = encrypt(JSON.stringify(params.input), encryptionKey);
+  } else {
+    inputData = JSON.stringify(params.input);
   }
 
   try {
-    console.log("STEP4: inserting diagnosis");
     const [inserted] = await db
       .insert(diagnoses)
       .values({
         userId: userId,
         type: params.type,
-        input: encryptedInput,
+        input: inputData,
         result: params.result,
         totalPotentialSaving: params.totalPotentialSaving || 0,
         answers: params.answers || null,
       })
       .returning({ id: diagnoses.id });
 
-    console.log("STEP5: diagnosis saved id=", inserted.id);
-
+    // diagnosis_inputs も保存
     if (inserted.id && params.diagnosisInputData) {
-      console.log("STEP6: inserting inputs");
       await db.insert(diagnosisInputs).values({
         diagnosisId: inserted.id,
         income: params.diagnosisInputData.income,
@@ -63,14 +52,12 @@ export async function saveDiagnosis(params: {
         occupation: params.diagnosisInputData.occupation,
         region: params.diagnosisInputData.region,
       });
-      console.log("STEP7: inputs saved");
     }
 
     return { success: true, diagnosisId: inserted.id };
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    console.error("FAIL at step4+:", msg.slice(0, 100));
-    console.error("FAIL detail:", msg.slice(100, 200));
+    console.error("SAVE-DIAGNOSIS FAIL:", msg.slice(0, 120));
     return { error: "Failed to save diagnosis" };
   }
 }
