@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { encrypt } from "@/lib/crypto";
 import { db } from "@/lib/db";
 import { diagnoses, diagnosisInputs } from "@/lib/db/schema";
+import { sql } from "drizzle-orm";
 
 export async function saveDiagnosis(params: {
   type: "quick" | "full";
@@ -21,7 +22,6 @@ export async function saveDiagnosis(params: {
   const session = await auth();
   const userId = session?.user?.id || null;
 
-  // 暗号化キーがあれば暗号化、なければ平文（匿名データのため問題なし）
   const encryptionKey = process.env.ENCRYPTION_KEY;
   let inputData: string;
   if (encryptionKey) {
@@ -31,33 +31,25 @@ export async function saveDiagnosis(params: {
   }
 
   try {
-    const [inserted] = await db
-      .insert(diagnoses)
-      .values({
-        userId: userId,
-        type: params.type,
-        input: inputData,
-        result: params.result,
-        totalPotentialSaving: params.totalPotentialSaving || 0,
-        answers: params.answers || null,
-      })
-      .returning({ id: diagnoses.id });
+    // まず最小限の raw SQL で INSERT テスト
+    const resultRows = await db.execute(
+      sql`INSERT INTO diagnoses (type, input, result, total_potential_saving, answers)
+          VALUES (${params.type}, ${inputData}, ${JSON.stringify(params.result)}::jsonb, ${params.totalPotentialSaving || 0}, ${JSON.stringify(params.answers || null)}::jsonb)
+          RETURNING id`
+    );
 
-    // diagnosis_inputs も保存
-    if (inserted.id && params.diagnosisInputData) {
-      await db.insert(diagnosisInputs).values({
-        diagnosisId: inserted.id,
-        income: params.diagnosisInputData.income,
-        age: params.diagnosisInputData.age,
-        occupation: params.diagnosisInputData.occupation,
-        region: params.diagnosisInputData.region,
-      });
+    const diagnosisId = (resultRows as unknown as Array<{ id: string }>)[0]?.id;
+
+    if (diagnosisId && params.diagnosisInputData) {
+      await db.execute(
+        sql`INSERT INTO diagnosis_inputs (diagnosis_id, income, age, occupation, region)
+            VALUES (${diagnosisId}, ${params.diagnosisInputData.income}, ${params.diagnosisInputData.age}, ${params.diagnosisInputData.occupation}, ${params.diagnosisInputData.region})`
+      );
     }
 
-    return { success: true, diagnosisId: inserted.id };
+    return { success: true, diagnosisId };
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    console.error("SAVE-DIAGNOSIS FAIL:", msg.slice(0, 120));
     return { error: msg };
   }
 }
