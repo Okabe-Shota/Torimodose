@@ -29,11 +29,16 @@ export function SaveResultButton({ type, input, result, isLoggedIn }: Props) {
 
   if (!isLoggedIn) {
     return (
-      <a href="/auth/signup">
-        <Button variant="outline" className="w-full" size="lg">
-          結果を保存する（無料アカウント作成）
-        </Button>
-      </a>
+      <div className="space-y-3">
+        <p className="text-center text-sm text-muted-foreground">
+          ℹ️ この診断結果はサーバーに保存されていません。（匿名利用中）
+        </p>
+        <a href="/auth/signup">
+          <Button variant="ghost" className="w-full text-sm">
+            結果を保存する（ログイン）
+          </Button>
+        </a>
+      </div>
     );
   }
 
