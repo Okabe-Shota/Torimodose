@@ -26,6 +26,11 @@ export async function saveDiagnosis(params: {
 
   const encryptedInput = encrypt(JSON.stringify(params.input), encryptionKey);
 
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!anonKey) {
+    return { error: "Supabase anon key not configured" };
+  }
+
   try {
     // Supabase Edge Function を呼び出し
     const response = await fetch(
@@ -34,6 +39,7 @@ export async function saveDiagnosis(params: {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${anonKey}`,
         },
         body: JSON.stringify({
           userId: userId,
