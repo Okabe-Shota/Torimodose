@@ -56,12 +56,27 @@ export default async function FullResultPage({ searchParams }: Props) {
 
   // 診断入力データを保存（年収、年齢、職種、勤務地）
   if (diagnosisResult.diagnosisId && parsedData.age && parsedData.occupation && parsedData.region) {
-    await saveDiagnosisInputs({
-      diagnosisId: diagnosisResult.diagnosisId,
-      income: parsedData.annualIncome,
-      age: parsedData.age,
-      occupation: parsedData.occupation,
-      region: parsedData.region,
+    try {
+      console.log("About to save diagnosis inputs with diagnosisId:", diagnosisResult.diagnosisId);
+      console.log("parsedData:", parsedData);
+
+      await saveDiagnosisInputs({
+        diagnosisId: diagnosisResult.diagnosisId,
+        income: parsedData.annualIncome,
+        age: parsedData.age,
+        occupation: parsedData.occupation,
+        region: parsedData.region,
+      });
+      console.log("Successfully saved diagnosis inputs");
+    } catch (error) {
+      console.error("Failed to save diagnosis inputs:", error);
+    }
+  } else {
+    console.log("Skipping diagnosis inputs save because:", {
+      hasDiagnosisId: !!diagnosisResult.diagnosisId,
+      hasAge: !!parsedData.age,
+      hasOccupation: !!parsedData.occupation,
+      hasRegion: !!parsedData.region,
     });
   }
 
