@@ -2,6 +2,8 @@
 
 import { auth } from "@/lib/auth";
 import { encrypt } from "@/lib/crypto";
+import { db } from "@/lib/db";
+import { diagnoses, diagnosisInputs } from "@/lib/db/schema";
 
 export async function saveDiagnosis(params: {
   type: "quick" | "full";
@@ -25,61 +27,39 @@ export async function saveDiagnosis(params: {
     return { error: "Encryption key not configured" };
   }
 
-  const supabaseUrl = process.env.SUPABASE_URL;
-  if (!supabaseUrl) {
-    console.error("SAVE-DIAGNOSIS FAIL: SUPABASE_URL not set");
-    return { error: "Supabase URL not configured" };
-  }
-
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!anonKey) {
-    console.error("SAVE-DIAGNOSIS FAIL: NEXT_PUBLIC_SUPABASE_ANON_KEY not set");
-    return { error: "Supabase anon key not configured" };
-  }
-
-  let encryptedInput: string;
   try {
-    encryptedInput = encrypt(JSON.stringify(params.input), encryptionKey);
-  } catch (e) {
-    console.error("SAVE-DIAGNOSIS FAIL: encrypt() threw:", e instanceof Error ? e.message : e);
-    return { error: "Encryption failed" };
-  }
+    const encryptedInput = encrypt(JSON.stringify(params.input), encryptionKey);
 
-  try {
-    const edgeFunctionUrl = `${supabaseUrl}/functions/v1/save-diagnosis`;
-    console.log("SAVE-DIAGNOSIS: calling", edgeFunctionUrl);
-
-    const response = await fetch(edgeFunctionUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${anonKey}`,
-      },
-      body: JSON.stringify({
-        userId,
+    // Drizzle ORM で直接 INSERT（Edge Function を経由しない）
+    const [inserted] = await db
+      .insert(diagnoses)
+      .values({
+        userId: userId,
         type: params.type,
         input: encryptedInput,
         result: params.result,
         totalPotentialSaving: params.totalPotentialSaving || 0,
-        answers: params.answers,
-        diagnosisInputData: params.diagnosisInputData || null,
-      }),
-    });
+        answers: params.answers || null,
+      })
+      .returning({ id: diagnoses.id });
 
-    console.log("SAVE-DIAGNOSIS: response status", response.status);
+    console.log("SAVE-DIAGNOSIS SUCCESS: diagnosisId =", inserted.id);
 
-    if (!response.ok) {
-      const errorBody = await response.text();
-      console.error("SAVE-DIAGNOSIS FAIL: response not ok:", response.status, errorBody);
-      return { error: `Edge Function returned ${response.status}` };
+    // diagnosis_inputs も直接 INSERT
+    if (inserted.id && params.diagnosisInputData) {
+      await db.insert(diagnosisInputs).values({
+        diagnosisId: inserted.id,
+        income: params.diagnosisInputData.income,
+        age: params.diagnosisInputData.age,
+        occupation: params.diagnosisInputData.occupation,
+        region: params.diagnosisInputData.region,
+      });
+      console.log("SAVE-DIAGNOSIS-INPUTS SUCCESS");
     }
 
-    const data = await response.json();
-    const diagnosisId = data.data?.[0]?.id;
-    console.log("SAVE-DIAGNOSIS SUCCESS: diagnosisId =", diagnosisId);
-    return { success: true, data, diagnosisId };
+    return { success: true, diagnosisId: inserted.id };
   } catch (error) {
-    console.error("SAVE-DIAGNOSIS FAIL: fetch threw:", error instanceof Error ? error.message : error);
+    console.error("SAVE-DIAGNOSIS FAIL:", error instanceof Error ? error.message : error);
     return { error: "Failed to save diagnosis" };
   }
 }
