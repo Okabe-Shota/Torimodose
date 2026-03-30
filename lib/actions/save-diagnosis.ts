@@ -38,9 +38,11 @@ export async function saveDiagnosis(params: {
   }
 
   try {
+    const edgeFunctionUrl = `${supabaseUrl}/functions/v1/save-diagnosis`;
+    console.log("Calling Edge Function at:", edgeFunctionUrl);
     // Supabase Edge Function を呼び出し
     const response = await fetch(
-      `${supabaseUrl}/functions/v1/save-diagnosis`,
+      edgeFunctionUrl,
       {
         method: "POST",
         headers: {
@@ -69,7 +71,9 @@ export async function saveDiagnosis(params: {
     const diagnosisId = data.data?.[0]?.id;
     return { success: true, data, diagnosisId };
   } catch (error) {
-    console.error("Error calling save-diagnosis function:", error);
+    console.error("Error calling save-diagnosis function:", error instanceof Error ? error.message : error);
+    console.error("SUPABASE_URL value:", supabaseUrl);
+    console.error("ANON_KEY present:", !!anonKey);
     return { error: "Failed to save diagnosis" };
   }
 }
