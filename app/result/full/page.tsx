@@ -41,7 +41,7 @@ export default async function FullResultPage({ searchParams }: Props) {
   const { deductions, totalPotentialSaving } = result;
 
   // 常に自動保存（匿名でも保存） + 入力データも同時に保存
-  await saveDiagnosis({
+  const saveResult = await saveDiagnosis({
     type: "full",
     input: parsedData,
     result: {
@@ -60,6 +60,8 @@ export default async function FullResultPage({ searchParams }: Props) {
         }
       : undefined,
   });
+  // DEBUG: エラーメッセージをページに表示（原因特定後に削除）
+  const debugError = saveResult?.error || null;
 
   const taxDeductions = deductions.filter((d) => d.category !== "benefit");
   const benefits = deductions.filter((d) => d.category === "benefit");
@@ -118,6 +120,13 @@ export default async function FullResultPage({ searchParams }: Props) {
       {deductions.length === 0 && (
         <div className="rounded-lg bg-green-50 p-6 text-center text-green-800">
           素晴らしい。主要な控除・給付金はすべて活用できています。
+        </div>
+      )}
+
+      {/* DEBUG: 原因特定後に削除 */}
+      {debugError && (
+        <div className="rounded-lg bg-red-50 p-4 text-xs text-red-800 break-all mb-4">
+          DEBUG: {debugError}
         </div>
       )}
 

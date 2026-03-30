@@ -58,6 +58,6 @@ export async function saveDiagnosis(params: {
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     console.error("SAVE-DIAGNOSIS FAIL:", msg.slice(0, 120));
-    return { error: "Failed to save diagnosis" };
+    return { error: msg };
   }
 }
