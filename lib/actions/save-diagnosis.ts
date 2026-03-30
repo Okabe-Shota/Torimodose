@@ -17,63 +17,69 @@ export async function saveDiagnosis(params: {
   };
 }) {
   const session = await auth();
-  // ユーザーIDは optional（匿名でも保存可能）
   const userId = session?.user?.id || null;
 
   const encryptionKey = process.env.ENCRYPTION_KEY;
   if (!encryptionKey) {
+    console.error("SAVE-DIAGNOSIS FAIL: ENCRYPTION_KEY not set");
     return { error: "Encryption key not configured" };
   }
 
   const supabaseUrl = process.env.SUPABASE_URL;
   if (!supabaseUrl) {
+    console.error("SAVE-DIAGNOSIS FAIL: SUPABASE_URL not set");
     return { error: "Supabase URL not configured" };
   }
 
-  const encryptedInput = encrypt(JSON.stringify(params.input), encryptionKey);
-
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!anonKey) {
+    console.error("SAVE-DIAGNOSIS FAIL: NEXT_PUBLIC_SUPABASE_ANON_KEY not set");
     return { error: "Supabase anon key not configured" };
+  }
+
+  let encryptedInput: string;
+  try {
+    encryptedInput = encrypt(JSON.stringify(params.input), encryptionKey);
+  } catch (e) {
+    console.error("SAVE-DIAGNOSIS FAIL: encrypt() threw:", e instanceof Error ? e.message : e);
+    return { error: "Encryption failed" };
   }
 
   try {
     const edgeFunctionUrl = `${supabaseUrl}/functions/v1/save-diagnosis`;
-    console.log("Calling Edge Function at:", edgeFunctionUrl);
-    // Supabase Edge Function を呼び出し
-    const response = await fetch(
-      edgeFunctionUrl,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${anonKey}`,
-        },
-        body: JSON.stringify({
-          userId: userId,
-          type: params.type,
-          input: encryptedInput,
-          result: params.result,
-          totalPotentialSaving: params.totalPotentialSaving || 0,
-          answers: params.answers,
-          diagnosisInputData: params.diagnosisInputData || null,
-        }),
-      }
-    );
+    console.log("SAVE-DIAGNOSIS: calling", edgeFunctionUrl);
+
+    const response = await fetch(edgeFunctionUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${anonKey}`,
+      },
+      body: JSON.stringify({
+        userId,
+        type: params.type,
+        input: encryptedInput,
+        result: params.result,
+        totalPotentialSaving: params.totalPotentialSaving || 0,
+        answers: params.answers,
+        diagnosisInputData: params.diagnosisInputData || null,
+      }),
+    });
+
+    console.log("SAVE-DIAGNOSIS: response status", response.status);
 
     if (!response.ok) {
-      const error = await response.json();
-      return { error: error.error || "Failed to save diagnosis" };
+      const errorBody = await response.text();
+      console.error("SAVE-DIAGNOSIS FAIL: response not ok:", response.status, errorBody);
+      return { error: `Edge Function returned ${response.status}` };
     }
 
     const data = await response.json();
-    // Extract diagnosis ID from the saved data
     const diagnosisId = data.data?.[0]?.id;
+    console.log("SAVE-DIAGNOSIS SUCCESS: diagnosisId =", diagnosisId);
     return { success: true, data, diagnosisId };
   } catch (error) {
-    console.error("Error calling save-diagnosis function:", error instanceof Error ? error.message : error);
-    console.error("SUPABASE_URL value:", supabaseUrl);
-    console.error("ANON_KEY present:", !!anonKey);
+    console.error("SAVE-DIAGNOSIS FAIL: fetch threw:", error instanceof Error ? error.message : error);
     return { error: "Failed to save diagnosis" };
   }
 }
