@@ -312,9 +312,11 @@ type AnswerEntry = { using: boolean; amount?: number }
 type Props = {
   annualIncome: number
   age: number
+  occupation: string
+  region: string
 }
 
-export function DiagnosisWizard({ annualIncome, age }: Props) {
+export function DiagnosisWizard({ annualIncome, age, occupation, region }: Props) {
   const router = useRouter()
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set())
   const [started, setStarted] = useState(false)
@@ -367,7 +369,7 @@ export function DiagnosisWizard({ annualIncome, age }: Props) {
 
     const nextStep = step + 1
     if (nextStep >= filteredQuestions.length) {
-      const payload = { annualIncome, answers: updatedAnswers }
+      const payload = { annualIncome, age, occupation, region, answers: updatedAnswers }
       const encoded = encodeURIComponent(JSON.stringify(payload))
       router.push(`/result/full?data=${encoded}`)
     } else {

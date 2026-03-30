@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { deductionRules } from "@/lib/db/schema";
 import { saveDiagnosis } from "@/lib/actions/save-diagnosis";
+import { saveDiagnosisInputs } from "@/lib/actions/save-diagnosis-inputs";
 import type { DeductionRule } from "@/lib/engine/deduction-engine";
 
 type Props = {
@@ -41,7 +42,7 @@ export default async function FullResultPage({ searchParams }: Props) {
   const { deductions, totalPotentialSaving } = result;
 
   // 常に自動保存（匿名でも保存）
-  await saveDiagnosis({
+  const diagnosisResult = await saveDiagnosis({
     type: "full",
     input: parsedData,
     result: {
@@ -52,6 +53,17 @@ export default async function FullResultPage({ searchParams }: Props) {
     totalPotentialSaving,
     answers: parsedData.answers,
   });
+
+  // 診断入力データを保存（年収、年齢、職種、勤務地）
+  if (diagnosisResult.diagnosisId && parsedData.age && parsedData.occupation && parsedData.region) {
+    await saveDiagnosisInputs({
+      diagnosisId: diagnosisResult.diagnosisId,
+      income: parsedData.annualIncome,
+      age: parsedData.age,
+      occupation: parsedData.occupation,
+      region: parsedData.region,
+    });
+  }
 
   const taxDeductions = deductions.filter((d) => d.category !== "benefit");
   const benefits = deductions.filter((d) => d.category === "benefit");

@@ -28,7 +28,13 @@ export function QuickInputForm() {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!isComplete) return;
-    router.push(`/diagnosis?income=${income}&age=${age}`);
+    const params = new URLSearchParams({
+      income,
+      age,
+      occupation,
+      region,
+    });
+    router.push(`/diagnosis?${params.toString()}`);
   }
 
   return (

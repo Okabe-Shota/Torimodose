@@ -2,13 +2,13 @@ import { redirect } from "next/navigation"
 import { DiagnosisWizard } from "@/components/forms/DiagnosisWizard"
 
 type Props = {
-  searchParams: Promise<{ income?: string; age?: string }>
+  searchParams: Promise<{ income?: string; age?: string; occupation?: string; region?: string }>
 }
 
 export default async function DiagnosisPage({ searchParams }: Props) {
   const params = await searchParams
 
-  if (!params.income || !params.age) {
+  if (!params.income || !params.age || !params.occupation || !params.region) {
     redirect("/")
   }
 
@@ -24,7 +24,12 @@ export default async function DiagnosisPage({ searchParams }: Props) {
       <h1 className="text-2xl font-semibold tracking-tight text-foreground mb-8">
         控除・給付金の診断
       </h1>
-      <DiagnosisWizard annualIncome={income * 10000} age={age} />
+      <DiagnosisWizard
+        annualIncome={income * 10000}
+        age={age}
+        occupation={params.occupation}
+        region={params.region}
+      />
     </div>
   )
 }
