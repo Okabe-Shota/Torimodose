@@ -2,8 +2,6 @@
 
 import { auth } from "@/lib/auth";
 import { encrypt } from "@/lib/crypto";
-import { db } from "@/lib/db";
-import { diagnoses, diagnosisInputs } from "@/lib/db/schema";
 
 export async function saveDiagnosis(params: {
   type: "quick" | "full";
@@ -21,6 +19,13 @@ export async function saveDiagnosis(params: {
   const session = await auth();
   const userId = session?.user?.id || null;
 
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !serviceKey) {
+    return { error: `Missing env: url=${!!supabaseUrl} key=${!!serviceKey}` };
+  }
+
   const encryptionKey = process.env.ENCRYPTION_KEY;
   let inputData: string;
   if (encryptionKey) {
@@ -30,38 +35,61 @@ export async function saveDiagnosis(params: {
   }
 
   try {
-    const [inserted] = await db
-      .insert(diagnoses)
-      .values({
-        userId,
+    // PostgREST API で INSERT（Drizzle/postgres.js をバイパス）
+    const res = await fetch(`${supabaseUrl}/rest/v1/diagnoses`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: serviceKey,
+        Authorization: `Bearer ${serviceKey}`,
+        Prefer: "return=representation",
+      },
+      body: JSON.stringify({
+        user_id: userId,
         type: params.type,
         input: inputData,
         result: params.result,
-        totalPotentialSaving: params.totalPotentialSaving || 0,
+        total_potential_saving: params.totalPotentialSaving || 0,
         answers: params.answers || null,
-      })
-      .returning({ id: diagnoses.id });
+      }),
+    });
 
-    if (inserted.id && params.diagnosisInputData) {
-      await db.insert(diagnosisInputs).values({
-        diagnosisId: inserted.id,
-        income: params.diagnosisInputData.income,
-        age: params.diagnosisInputData.age,
-        occupation: params.diagnosisInputData.occupation,
-        region: params.diagnosisInputData.region,
-      });
+    if (!res.ok) {
+      const body = await res.text();
+      return { error: `REST ${res.status}: ${body.slice(0, 120)}` };
     }
 
-    return { success: true, diagnosisId: inserted.id };
-  } catch (error: unknown) {
-    // postgres.js のエラーは code, detail, hint 等のプロパティを持つ
-    const e = error as Record<string, unknown>;
-    const info = [
-      `msg:${e.message || "?"}`.slice(0, 60),
-      `code:${e.code || "?"}`,
-      `detail:${e.detail || "?"}`.slice(0, 60),
-      `severity:${e.severity || "?"}`,
-    ].join(" | ");
-    return { error: info };
+    const data = await res.json();
+    const diagnosisId = data?.[0]?.id;
+
+    // diagnosis_inputs も PostgREST で INSERT
+    if (diagnosisId && params.diagnosisInputData) {
+      const res2 = await fetch(`${supabaseUrl}/rest/v1/diagnosis_inputs`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: serviceKey,
+          Authorization: `Bearer ${serviceKey}`,
+          Prefer: "return=minimal",
+        },
+        body: JSON.stringify({
+          diagnosis_id: diagnosisId,
+          income: params.diagnosisInputData.income,
+          age: params.diagnosisInputData.age,
+          occupation: params.diagnosisInputData.occupation,
+          region: params.diagnosisInputData.region,
+        }),
+      });
+
+      if (!res2.ok) {
+        const body2 = await res2.text();
+        return { error: `inputs REST ${res2.status}: ${body2.slice(0, 120)}` };
+      }
+    }
+
+    return { success: true, diagnosisId };
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    return { error: `catch: ${msg.slice(0, 120)}` };
   }
 }
